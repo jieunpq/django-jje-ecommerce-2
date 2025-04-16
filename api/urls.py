@@ -15,4 +15,5 @@ urlpatterns = [
     path("hello-world-drf/", base_views.hello_world_drf),
     # dev_29 proudct_view.py
     path("products/", product_views.products_api),
+    path("product/<int:pk>/", product_views.product_api),
 ]
