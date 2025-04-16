@@ -30,10 +30,8 @@ def product_detail_api(request, pk):
         return Response(serializer.data)
 
     elif request.method == "PUT":
-        print("요청 데이터:", request.data)  # 디버깅용
         serializer = ProductSerializer(product, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
-        print("에러:", serializer.errors)
         return Response(serializer.errors, status=400)
