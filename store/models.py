@@ -15,7 +15,7 @@ class Product(models.Model):
     price = models.DecimalField(default=0, max_digits=10, decimal_places=2)  # 9999999
     description = models.CharField(max_length=250, default="", blank=True, null=True)
     # dev_30 json 처리를 위하여 blank=True, null=True
-    image = models.ImageField(upload_to="upload/product")
+    image = models.ImageField(upload_to="upload/product", null=True, blank=True)
     # dev_32 역방향 참조를 위하여 related_name="products"
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="products")
     # dev_6

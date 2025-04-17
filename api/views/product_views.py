@@ -1,8 +1,17 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from store.models import Product
+from rest_framework import status
+from store.models import Product, Category
 from api.serializers import ProductSerializer
+from django.shortcuts import get_object_or_404
 
+
+# http://127.0.0.1:8000/api/products/
+# 방식   url         기능
+# GET   products/    list
+# POST  products/    create
+
+# 단일 상품 GET, PUT(수정), DELETE
 @api_view(["GET", "POST"])
 def products_api(request):
     if request.method == "GET":
@@ -10,28 +19,22 @@ def products_api(request):
         serializer = ProductSerializer(products, many=True)
         return Response(serializer.data)
 
-    elif request.method == "POST":
-        serializer = ProductSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=201)
-        return Response(serializer.errors, status=400)
+    if request.method == "POST":
+        
+        data = request.data.copy()
 
+        category_data = data.pop("category")
+        
+        # 리스트 형태로 들어올 경우 첫 번째 dict만 사용
+        if isinstance(category_data, list):
+            category_data = category_data[0]
 
-@api_view(["GET", "PUT"])
-def product_detail_api(request, pk):
-    try:
-        product = Product.objects.get(pk=pk)
-    except Product.DoesNotExist:
-        return Response({"error": "Product not found"}, status=404)
+        # category_data는 반드시 dict여야 함
+        category, _ = Category.objects.get_or_create(**category_data)
 
-    if request.method == "GET":
-        serializer = ProductSerializer(product)
+        # 남은 데이터로 product 생성
+        serializer = ProductSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(category=category)
+
         return Response(serializer.data)
-
-    elif request.method == "PUT":
-        serializer = ProductSerializer(product, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=400)
