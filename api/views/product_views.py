@@ -2,9 +2,10 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from store.models import Product, Category
-from api.serializers import ProductSerializer
 from django.shortcuts import get_object_or_404
 
+# dev_32
+from api.serializers.product_serializers import ProductSerializer
 
 # http://127.0.0.1:8000/api/products/
 # 방식   url         기능

@@ -1,7 +1,9 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from store.models import Product, Category
-from api.serializers import ProductSerializer, CategorySerializer
+
+# dev_34
+from api.serializers.category_serializers import CategorySerializer
 
 @api_view(["GET", "POST"])
 def categories_api(request):
