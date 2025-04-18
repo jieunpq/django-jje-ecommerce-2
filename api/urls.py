@@ -35,6 +35,8 @@ urlpatterns = [
     # Get  category/{id}       category
     # PUT  category/{id}       modify category
     # DELETE  category/{id}    delete category
-    path("categories/", category_views.CategoriesAPI.as_view()),
-    path("category/<int:pk>/", category_views.CategoryAPI.as_view()),
+    
+    # dev_36
+    path("categories/", category_views.CategoriesMixins.as_view()),
+    # path("category/<int:pk>/", category_views.CategoryMixins.as_view()),
 ]

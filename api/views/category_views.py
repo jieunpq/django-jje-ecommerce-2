@@ -3,6 +3,10 @@ from rest_framework.response import Response
 from store.models import Category
 from django.shortcuts import get_object_or_404
 from rest_framework import status
+# dev_36
+from rest_framework.mixins import ListModelMixin, CreateModelMixin
+from rest_framework.generics import GenericAPIView
+
 
 # dev_32
 from api.serializers.category_serializers import (
@@ -68,4 +72,13 @@ class CategoryAPI(APIView):
         category.delete()
         return Response("삭제 성공", status=status.HTTP_204_NO_CONTENT)
     
-        
+# dev_36
+class CategoriesMixins(ListModelMixin, CreateModelMixin, GenericAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
