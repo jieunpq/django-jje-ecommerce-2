@@ -10,6 +10,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError, PermissionDenied
+from rest_framework.viewsets import ModelViewSet
 
 
 
@@ -209,4 +210,10 @@ class CategoryGeneric(RetrieveUpdateDestroyAPIView):
             {"message": "카테고리가 삭제되었습니다."},
             status=status.HTTP_204_NO_CONTENT,
         )
+        
+    
+class CategoryViewSet(ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySimpleSerializer
+    
     
