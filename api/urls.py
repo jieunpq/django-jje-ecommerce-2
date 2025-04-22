@@ -24,10 +24,8 @@ urlpatterns = [
     # DELETE product/{id}      delete product
     path("products/", product_views.products_api),
     path("product/<int:pk>/", product_views.product_api),
-    
     # dev_32
     # path("categories/", category_views.categories_api),
-    
     # dev_35
     # 방식   url                기능
     # GET  categories/         list
@@ -35,8 +33,12 @@ urlpatterns = [
     # Get  category/{id}       category
     # PUT  category/{id}       modify category
     # DELETE  category/{id}    delete category
-    
     # dev_36
-    path("categories/", category_views.CategoriesMixins.as_view()),
-    # path("category/<int:pk>/", category_views.CategoryMixins.as_view()),
+    # path("categories/", category_views.CategoriesMixins.as_view()),
+    # path("category/<str:name>/", category_views.CategoryMixins.as_view()),
+    # dev_37
+    # path("categories/", category_views.CategoriesGeneric.as_view()),
+    # path("category/<int:pk>/", category_views.CategoryGeneric.as_view()),    
+    # dev_38
+    path("", include(router.urls)),
 ]

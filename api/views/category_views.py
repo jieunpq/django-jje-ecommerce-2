@@ -4,8 +4,13 @@ from store.models import Category
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 # dev_36
-from rest_framework.mixins import ListModelMixin, CreateModelMixin
+from rest_framework.mixins import ListModelMixin, CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, UpdateModelMixin, DestroyModelMixin
 from rest_framework.generics import GenericAPIView
+# dev_37
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import ValidationError, PermissionDenied
+
 
 
 # dev_32
@@ -73,6 +78,22 @@ class CategoryAPI(APIView):
         return Response("삭제 성공", status=status.HTTP_204_NO_CONTENT)
     
 # dev_36
+# GenericAPIView: self.get_queryset()과 self.get_serializer()를 제공
+# ListModelMixin: self.list() 내부에서 위의 메서드들을 호출
+# 주의
+# 기본적으로는 queryset, serializer_classs는 약속된 이름
+# 대신 커스텀 마이징은 가능
+
+# class CategoriesCustomMixins(ListModelMixin, CreateModelMixin, GenericAPIView):
+#     categories = Category.objects.all()
+#     category_serializer = CategorySimpleSerializer
+
+#     def get_queryset(self):
+#         return self.categories
+    
+#     def get_serializer_class(self):
+#         return self.category_serializer
+
 class CategoriesMixins(ListModelMixin, CreateModelMixin, GenericAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -82,3 +103,110 @@ class CategoriesMixins(ListModelMixin, CreateModelMixin, GenericAPIView):
 
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
+    
+class CategoryMixins(RetrieveModelMixin, GenericAPIView, UpdateModelMixin, DestroyModelMixin):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    # lookup_field = "name"
+    
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+ 
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+    
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+    
+# dev_37
+# generics.CreateAPIView : 생성
+# generics.ListAPIView : 목록
+# generics.RetrieveAPIView : 조회
+# generics.DestroyAPIView : 삭제
+# generics.UpdateAPIView : 수정
+# generics.RetrieveUpdateAPIView : 조회/수정
+# generics.RetrieveDestroyAPIView : 조회/삭제
+# generics.ListCreateAPIView : 목록/생성
+# generics.RetrieveUpdateDestroyAPIView : 조회/수정/삭제
+
+# 권한
+# AllowAny                     누구나 접근 가능 (기본값)
+# IsAuthenticated              로그인한 사용자만 접근 가능
+# IsAdminUser                  is_staff=True인 관리자만 접근 가능
+# IsAuthenticatedOrReadOnly    읽기는 모두 허용, 쓰기는 인증 사용자만 가능
+
+# 같은 이름의 카테고리가 이미 존재할 경우 오류
+class CategoriesGeneric(ListCreateAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    # permission_classes = [IsAuthenticated]
+
+    # create 함수를 오버라이딩
+    def create(self, request, *args, **kwargs):
+        name = request.data.get("name")
+
+        # 같은 이름의 카테고리가 이미 존재할 경우 오류 메세지
+        if Category.objects.filter(name=name).exists():
+            raise ValidationError({"message": "같은 이름의 카테고리가 있습니다."})
+
+        response = super().create(request, *args, **kwargs)
+        response.data = {
+            "message": "카테고리가 성공적으로 생성되었습니다.",
+            "category": response.data,
+        }
+
+        return response
+    
+class CategoryGeneric(RetrieveUpdateDestroyAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySimpleSerializer
+
+    # 조회시 로그 찍기
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        print(f"조회 카테고리 ID {instance.id} - {instance.name}")
+        return super().retrieve(request, *args, **kwargs)
+
+    # 수정 시 로깅 및 응답 커스텀 마이징
+    def update(self, request, *args, **kwargs):
+
+        instance = self.get_object()
+        print(f"수정 카테고리 이름 {instance.name} -> {request.data.get('name')}")
+        response = super().update(request, *args, **kwargs)  # update 쿼리 날아감
+        response.data = {
+            "message": f"수정 카테고리 이름 {instance.name} -> {request.data.get('name')}",
+            "category": response.data,
+        }
+
+        return response
+    
+    # class DestroyModelMixin:
+    # """
+    # Destroy a model instance.
+    # """
+    # def destroy(self, request, *args, **kwargs):
+    #     instance = self.get_object()
+    #     self.perform_destroy(instance)
+    #     return Response(status=status.HTTP_204_NO_CONTENT)
+
+    # def perform_destroy(self, instance):
+    #     instance.delete()
+    
+    
+    
+    def perform_destroy(self, instance):
+        if instance.name == "자바":
+            raise PermissionDenied("이 카테고리는 관리자만이 삭제 가능합니다.")
+        
+        print(f"[삭제] 카테고리 {instance.name} 삭제됨")
+        instance.delete()
+        
+    # 삭제 응답 커스터마이징
+    def destroy(self, request, *args, **kwargs):
+        self.perform_destroy(self.get_object())
+        
+        return Response(
+            {"message": "카테고리가 삭제되었습니다."},
+            status=status.HTTP_204_NO_CONTENT,
+        )
+    
